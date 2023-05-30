@@ -7,6 +7,7 @@ var syncByInstall = require('../middleware/sync_by_install');
 var editable = require('../middleware/editable');
 var existsPackage = require('../middleware/exists_package');
 var unpublishable = require('../middleware/unpublishable');
+var accessable = require('../plugins/access_middleware')
 
 var showTotal = require('../controllers/total');
 
@@ -50,6 +51,9 @@ function routes(app) {
     }
   }
 
+  const metaAccess = accessable({ stage: accessable.InstallStage.META })
+  const tgzAccess = accessable({ stage: accessable.InstallStage.TGZ })
+
   app.get('/', jsonp, showTotal);
   // before /:name/:version
   // get all modules, for npm search
@@ -70,8 +74,9 @@ function routes(app) {
   // scope package: params: [$name, $version]
   app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/([^\/]+)$/, syncByInstall, getOneVersion);
 
-  app.get('/:name', syncByInstall, listAllVersions);
-  app.get('/:name/:version', syncByInstall, getOneVersion);
+  // TODO: 添加 accessable 控制
+  app.get('/:name', metaAccess, syncByInstall, listAllVersions);
+  app.get('/:name/:version', metaAccess, syncByInstall, getOneVersion);
 
   // try to add module
   app.put(/^\/(@[\w\-\.]+\/[\w\-\.]+)$/, login, publishable, savePackage);
@@ -87,13 +92,14 @@ function routes(app) {
   app.put(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/([\w\-\.]+)$/, login, editable, tag);
   app.put('/:name/:tag', login, editable, tag);
 
+  // TODO: 添加 accessable 控制
   // need limit by ip
-  app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/download\/(@[\w\-\.]+\/[\w\-\.]+)$/, limit, downloadPackage);
-  app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/download\/([\w\-\.]+)$/, limit, downloadPackage);
-  app.get('/:name/download/:filename', limit, downloadPackage);
-  app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/\-\/(@[\w\-\.]+\/[\w\-\.]+)$/, limit, downloadPackage);
-  app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/\-\/([\w\-\.]+)$/, limit, downloadPackage);
-  app.get('/:name/-/:filename', limit, downloadPackage);
+  app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/download\/(@[\w\-\.]+\/[\w\-\.]+)$/, tgzAccess, limit, downloadPackage);
+  app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/download\/([\w\-\.]+)$/, tgzAccess, limit, downloadPackage);
+  app.get('/:name/download/:filename', tgzAccess, limit, downloadPackage);
+  app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/\-\/(@[\w\-\.]+\/[\w\-\.]+)$/, tgzAccess, limit, downloadPackage);
+  app.get(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/\-\/([\w\-\.]+)$/, tgzAccess, limit, downloadPackage);
+  app.get('/:name/-/:filename', tgzAccess, limit, downloadPackage);
 
   // delete tarball and remove one version
   app.delete(/^\/(@[\w\-\.]+\/[\w\-\.]+)\/download\/(@[\w\-\.]+\/[\w\-\.]+)\/\-rev\/([\w\-\.]+)$/,

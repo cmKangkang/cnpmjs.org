@@ -12,6 +12,8 @@ var Nfs = require('fs-cnpm');
 var root = path.dirname(__dirname);
 var dataDir = path.join(process.env.HOME || root, '.cnpmjs.org');
 
+const UserService = require('../plugins/user_service')
+
 var config = {
   version: version,
   dataDir: dataDir,
@@ -81,12 +83,13 @@ var config = {
 
   enableCompress: false, // enable gzip response or not
 
+  // TODO: 管理员配置
   // default system admins
   admins: {
     // name: email
-    fengmk2: 'fengmk2@gmail.com',
-    admin: 'admin@cnpmjs.org',
-    dead_horse: 'dead_horse@qq.com',
+    cmkk: 'cmkk@wps.cn',
+    cmll: 'cmll@wps.cn',
+    admin: 'admin@wps.cn'
   },
 
   // email notification for errors
@@ -117,13 +120,15 @@ var config = {
    */
 
   database: {
-    db: 'cnpmjs_test',
+    // TODO: 数据库
+    db: 'cnpmjsorg',
     username: 'root',
-    password: '',
+    password: 'root',
 
     // the sql dialect of the database
     // - currently supported: 'mysql', 'sqlite', 'postgres', 'mariadb'
-    dialect: 'sqlite',
+    // dialect: 'sqlite',
+    dialect: 'mysql',
 
     // custom host; default: 127.0.0.1
     host: '127.0.0.1',
@@ -146,7 +151,7 @@ var config = {
 
     // the storage engine for 'sqlite'
     // default store into ~/.cnpmjs.org/data.sqlite
-    storage: path.join(dataDir, 'data.sqlite'),
+    // storage: path.join(dataDir, 'cnpmjsorg.db'),
 
     logging: !!process.env.SQL_DEBUG,
   },
@@ -159,6 +164,7 @@ var config = {
   enableNpmAuditsProxy: true,
 
   // package tarball store in local filesystem by default
+  // TODO: 文件本地存储插件
   nfs: new Nfs({
     dir: path.join(dataDir, 'nfs')
   }),
@@ -170,7 +176,7 @@ var config = {
   unpublishRemoveTarball: true,
 
   // registry url name
-  registryHost: 'r.cnpmjs.org',
+  // registryHost: 'r.cnpmjs.org',
 
   /**
    * registry mode config
@@ -182,7 +188,8 @@ var config = {
   enablePrivate: false,
 
   // registry scopes, if don't set, means do not support scopes
-  scopes: [ '@cnpm', '@cnpmtest', '@cnpm-test' ],
+  // TODO: 添加 scope
+  scopes: ['@cnpm', '@cnpmtest', '@cnpm-test', '@test'],
 
   // some registry already have some private packages in global scope
   // but we want to treat them as scoped private packages,
@@ -259,12 +266,12 @@ var config = {
   syncScopeInterval: '12h',
   // scope package sync config
   /**
- * sync scope package from assign registry
- * @param {Array<scope>} scopes
- * @param {String} scope.scope scope name
- * @param {String} scope.sourceCnpmWeb source cnpm registry web url for get scope all packages name
- * @param {String} scope.sourceCnpmRegistry source cnpm registry url for sync packages
- */
+   * sync scope package from assign registry
+   * @param {Array<scope>} scopes
+   * @param {String} scope.scope scope name
+   * @param {String} scope.sourceCnpmWeb source cnpm registry web url for get scope all packages name
+   * @param {String} scope.sourceCnpmRegistry source cnpm registry url for sync packages
+   */
   syncScopeConfig: [],
 
   handleSyncRegistry: 'http://127.0.0.1:7001',
@@ -273,7 +280,7 @@ var config = {
   badgeSubject: 'cnpm',
   // defautl use https://badgen.net/
   badgeService: {
-    url: function(subject, status, options) {
+    url: function (subject, status, options) {
       options = options || {};
       let url = `https://badgen.net/badge/${utility.encodeURIComponent(subject)}/${utility.encodeURIComponent(status)}`;
       if (options.color) {
@@ -293,7 +300,9 @@ var config = {
   // custom user service, @see https://github.com/cnpm/cnpmjs.org/wiki/Use-Your-Own-User-Authorization
   // when you not intend to ingegrate with your company's user system, then use null, it would
   // use the default cnpm user system
-  userService: null,
+  // userService: null,
+  // TODO: 增加自己的 userService
+  userService: new UserService({ url: 'http://localhost:8080/npm' }),
 
   // always-auth https://docs.npmjs.com/misc/config#always-auth
   // Force npm to always require authentication when accessing the registry, even for GET requests.
